@@ -1,5 +1,4 @@
 # script to setup the central Pyro hub
-from collections import defaultdict
 import Pyro4
 import time
 import threading
@@ -21,6 +20,7 @@ class centralHub(object):
 		self._lock=threading.Lock()
 
 	def startThread(self,thread_name):
+		"""Start one of the various threads available"""
 		if thread_name=="transp":
 			transp_runloop=threading.Thread(target=self.run_transp_thread)
 			transp_runloop.daemon=True
@@ -42,32 +42,36 @@ class centralHub(object):
 			summary_runloop.daemon=True
 			summary_runloop.start()
 		else:
-			print "Invalid thread_name"
+			print("Invalid thread_name")
 
 	def run_summary_thread(self):
+		"""Thread summary thread"""
 		global status
 		while(self._running):
 			# print the status of all inputs
 			sum_str=""
 			for i in status:
 				sum_str=sum_str+"%s: %d " % (i,status[i])
-			print sum_str
+			print (sum_str)
 			# update the html table 
 			time.sleep(5)	
 
 	def run_transp_thread(self):
+		"""Transparency thread"""
 		global status
 		while (self._running):
 			status["transp"]=self.check(self._transp_time,90)
 			time.sleep(5)
 
 	def run_cloud_thread(self):
+		"""Cloudwatcher thread"""
 		global status
 		while (self._running):
 			status["cloud"]=self.check(self._cloud_time,90)
 			time.sleep(5)
 
 	def run_rain_thread(self):
+		"""Rain sensor thread"""
 		global status
 		while (self._running):
 			status["rain"]=self.check(self._rain_time,90)
@@ -75,40 +79,26 @@ class centralHub(object):
 
 	@Pyro4.oneway
 	def update_transp(self,t):
+		"""Update the hand shake time of transparency script"""
 		self._transp_time=t
 
 	@Pyro4.oneway
 	def update_cloud(self,t):
+		"""Update the hand shake time of cloudwatcher script"""
 		self._cloud_time=t
 
 	@Pyro4.oneway
 	def update_rain(self,t):
+		"""Update the hand shake time of rain sensor script"""
 		self._rain_time=t
 
 	def check(self,chk, timeout_time):
+		"""Check the last update time"""
 		if (time.time() - chk) > timeout_time: 
 			return 0
 		else:
 			return 1
 		
-#	def check_transp(self, timeout_time):
-#		if (time.time() - self._transp_time) > timeout_time: 
-#			return 0
-#		else:
-#			return 1
-#	
-#	def check_cloud(self, timeout_time):
-#		if (time.time() - self._cloud_time) > timeout_time: 
-#			return 0
-#		else:
-#			return 1
-#	
-#	def check_rain(self, timeout_time):
-#		if (time.time() - self._rain_time) > timeout_time: 
-#			return 0
-#		else:
-#			return 1
-
 	def running(self):
 		"""Returns True when daemon is running"""
 		return self._running
@@ -118,6 +108,7 @@ class centralHub(object):
 		self._running = False
 
 def main():
+	"""Wrap it all up"""
 	daemon=Pyro4.Daemon('10.2.5.32')
 	hub=centralHub()
 	ns=Pyro4.locateNS()
