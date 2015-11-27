@@ -17,7 +17,7 @@ class moduleTest(object):
 
 	def run_transp_thread(self):
 		while (self._running):
-			stat=self.check(self._t_time)
+			stat=self.check()
 			if stat == False:
 				print "TIMEOUT"
 			else:
