@@ -11,6 +11,7 @@ class moduleTest(object):
 		self._t_time=time.time()
 		self._lock=threading.Lock()
 
+	def startThread(self):
 		transp_runloop=threading.Thread(target=self.run_transp_thread)
 		transp_runloop.daemon=True
 		transp_runloop.start()
