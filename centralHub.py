@@ -48,9 +48,9 @@ class centralHub(object):
 			# print the status of all inputs
 			sum_str=""
 			for i in self.status:
-				self_str=self_str+"%s: %d" % (i,self_status[i])
+				sum_str=sum_str+"%s: %d" % (i,self_status[i])
 			# update the html table 
-			time.sleep()	
+			time.sleep(5)	
 
 	def run_transp_thread(self):
 		while (self._running):
