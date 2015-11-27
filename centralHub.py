@@ -1,4 +1,4 @@
-# script to test the pyro setup
+# script to setup the central Pyro hub
 from collections import defaultdict
 import Pyro4
 import time
@@ -14,7 +14,10 @@ class centralHub(object):
 		self._rain_time=time.time()
 		self._microphone_time=time.time()
 		self._lock=threading.Lock()
-		self.status=defaultdict(list)
+		self.status={"transp":0,
+					"cloud":0,
+					"rain":0,
+					"microphones":0}
 
 	def startThread(self,thread_name):
 		if thread_name=="transp":
@@ -33,25 +36,35 @@ class centralHub(object):
 			microphone_runloop=threading.Thread(target=self.run_microphone_thread)
 			microphone_runloop.daemon=True
 			microphone_runloop.start()
+		elif thread_name=="summary":
+			summary_runloop=threading.Thread(target=self.run_summary_thread)
+			summary_runloop.daemon=True
+			summary_runloop.start()
 		else:
 			print "Invalid thread_name"
+
+	def run_summary_thread(self):
+		while(self._running):
+			# print the status of all inputs
+			sum_str=""
+			for i in self.status:
+				self_str=self_str+"%s: %d" % (i,self_status[i])
+			# update the html table 
+			time.sleep()	
 
 	def run_transp_thread(self):
 		while (self._running):
 			self.status["transp"]=self.check(self._transp_time,90)
-			print self.status["transp"]
 			time.sleep(5)
 
 	def run_cloud_thread(self):
 		while (self._running):
 			self.status["cloud"]=self.check(self._cloud_time,90)
-			print self.status["cloud"]
 			time.sleep(5)
 
 	def run_rain_thread(self):
 		while (self._running):
 			self.status["rain"]=self.check(self._rain_time,90)
-			print self.status["rain"]
 			time.sleep(5)
 
 	@Pyro4.oneway
@@ -80,10 +93,14 @@ class centralHub(object):
 		"""Stop the daemon thread"""
 		self._running = False
 
-daemon=Pyro4.Daemon('10.2.5.32')
-hub=centralHub()
-ns=Pyro4.locateNS()
-uri=daemon.register(centralHub)
-ns.register('central.hub',uri)
-print ('Ready.')
-daemon.requestLoop(loopCondition=hub.running)
+def main():
+	daemon=Pyro4.Daemon('10.2.5.32')
+	hub=centralHub()
+	ns=Pyro4.locateNS()
+	uri=daemon.register(centralHub)
+	ns.register('central.hub',uri)
+	print ('Ready.')
+	daemon.requestLoop(loopCondition=hub.running)
+
+if __name__ == '__main__':
+	main()
