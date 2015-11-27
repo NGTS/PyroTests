@@ -99,6 +99,7 @@ def main():
 	ns=Pyro4.locateNS()
 	uri=daemon.register(centralHub)
 	ns.register('central.hub',uri)
+	hub.startThread('summary')
 	print ('Ready.')
 	daemon.requestLoop(loopCondition=hub.running)
 
