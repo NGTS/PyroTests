@@ -48,7 +48,7 @@ class centralHub(object):
 			# print the status of all inputs
 			sum_str=""
 			for i in self.status:
-				sum_str=sum_str+"%s: %d" % (i,self_status[i])
+				sum_str=sum_str+"%s: %d" % (i,self.status[i])
 			# update the html table 
 			time.sleep(5)	
 
