@@ -39,8 +39,8 @@ class moduleTest(object):
 			return True
 
 	def stop(self):
-        """Stop the daemon thread"""
-        self._running = False
+		"""Stop the daemon thread"""
+		self._running = False
 
 daemon=Pyro4.Daemon('10.2.5.32')
 test=moduleTest()
