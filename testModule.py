@@ -16,7 +16,7 @@ class moduleTest(object):
 		self._lock=threading.Lock()
 		self.status=defaultdict(list)
 
-	def startThread(self):
+	def startThread(self,thread_name):
 		if thread_name=="transp":
 			transp_runloop=threading.Thread(target=self.run_transp_thread)
 			transp_runloop.daemon=True
