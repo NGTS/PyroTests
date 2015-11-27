@@ -49,6 +49,7 @@ class centralHub(object):
 			sum_str=""
 			for i in self.status:
 				sum_str=sum_str+"%s: %d" % (i,self.status[i])
+			print sum_str
 			# update the html table 
 			time.sleep(5)	
 
