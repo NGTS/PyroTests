@@ -4,6 +4,11 @@ import Pyro4
 import time
 import threading
 
+status={"transp":0,
+		"cloud":0,
+		"rain":0,
+		"microphones":0}
+
 class centralHub(object):
 
 	def __init__(self):
@@ -14,10 +19,6 @@ class centralHub(object):
 		self._rain_time=time.time()
 		self._microphone_time=time.time()
 		self._lock=threading.Lock()
-		self.status={"transp":0,
-					"cloud":0,
-					"rain":0,
-					"microphones":0}
 
 	def startThread(self,thread_name):
 		if thread_name=="transp":
@@ -44,28 +45,32 @@ class centralHub(object):
 			print "Invalid thread_name"
 
 	def run_summary_thread(self):
+		global status
 		while(self._running):
 			# print the status of all inputs
 			sum_str=""
-			for i in self.status:
-				sum_str=sum_str+"%s: %d" % (i,self.status[i])
+			for i in status:
+				sum_str=sum_str+"%s: %d " % (i,status[i])
 			print sum_str
 			# update the html table 
 			time.sleep(5)	
 
 	def run_transp_thread(self):
+		global status
 		while (self._running):
-			self.status["transp"]=self.check(self._transp_time,90)
+			status["transp"]=self.check(self._transp_time,90)
 			time.sleep(5)
 
 	def run_cloud_thread(self):
+		global status
 		while (self._running):
-			self.status["cloud"]=self.check(self._cloud_time,90)
+			status["cloud"]=self.check(self._cloud_time,90)
 			time.sleep(5)
 
 	def run_rain_thread(self):
+		global status
 		while (self._running):
-			self.status["rain"]=self.check(self._rain_time,90)
+			status["rain"]=self.check(self._rain_time,90)
 			time.sleep(5)
 
 	@Pyro4.oneway
@@ -79,12 +84,30 @@ class centralHub(object):
 	@Pyro4.oneway
 	def update_rain(self,t):
 		self._rain_time=t
-		
-	def check(self, chk, timeout_time):
+
+	def check(self,chk, timeout_time):
 		if (time.time() - chk) > timeout_time: 
 			return 0
 		else:
 			return 1
+		
+#	def check_transp(self, timeout_time):
+#		if (time.time() - self._transp_time) > timeout_time: 
+#			return 0
+#		else:
+#			return 1
+#	
+#	def check_cloud(self, timeout_time):
+#		if (time.time() - self._cloud_time) > timeout_time: 
+#			return 0
+#		else:
+#			return 1
+#	
+#	def check_rain(self, timeout_time):
+#		if (time.time() - self._rain_time) > timeout_time: 
+#			return 0
+#		else:
+#			return 1
 
 	def running(self):
 		"""Returns True when daemon is running"""
@@ -100,8 +123,8 @@ def main():
 	ns=Pyro4.locateNS()
 	uri=daemon.register(centralHub)
 	ns.register('central.hub',uri)
-	hub.startThread('summary')
 	print ('Ready.')
+	hub.startThread('summary')
 	daemon.requestLoop(loopCondition=hub.running)
 
 if __name__ == '__main__':
