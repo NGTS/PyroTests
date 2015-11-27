@@ -4,10 +4,10 @@ import Pyro4
 import time
 import threading
 
-class moduleTest(object):
+class centralHub(object):
 
 	def __init__(self):
-		"""Sets up the test module"""
+		"""Sets up the central hub"""
 		self._running=True
 		self._transp_time=time.time()
 		self._cloud_time=time.time()
@@ -38,19 +38,19 @@ class moduleTest(object):
 
 	def run_transp_thread(self):
 		while (self._running):
-			self.status["transp"]=self.check(self._transp_time)
+			self.status["transp"]=self.check(self._transp_time,90)
 			print self.status["transp"]
 			time.sleep(5)
 
 	def run_cloud_thread(self):
 		while (self._running):
-			self.status["cloud"]=self.check(self._cloud_time)
+			self.status["cloud"]=self.check(self._cloud_time,90)
 			print self.status["cloud"]
 			time.sleep(5)
 
 	def run_rain_thread(self):
 		while (self._running):
-			self.status["rain"]=self.check(self._rain_time)
+			self.status["rain"]=self.check(self._rain_time,90)
 			print self.status["rain"]
 			time.sleep(5)
 
@@ -66,8 +66,8 @@ class moduleTest(object):
 	def update_rain(self,t):
 		self._rain_time=t
 		
-	def check(self, chk):
-		if (time.time() - chk) > 90: 
+	def check(self, chk, timeout_time):
+		if (time.time() - chk) > timeout_time: 
 			return 0
 		else:
 			return 1
@@ -81,9 +81,9 @@ class moduleTest(object):
 		self._running = False
 
 daemon=Pyro4.Daemon('10.2.5.32')
-test=moduleTest()
+hub=centralHub()
 ns=Pyro4.locateNS()
-uri=daemon.register(moduleTest)
-ns.register('example.test',uri)
+uri=daemon.register(centralHub)
+ns.register('central.hub',uri)
 print ('Ready.')
-daemon.requestLoop(loopCondition=test.running)
+daemon.requestLoop(loopCondition=hub.running)
