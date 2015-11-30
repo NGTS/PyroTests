@@ -57,7 +57,7 @@ class centralHub(object):
 		while(self._running):
 			sum_str=""
 			out_str=""
-			tab_str="<!DOCTYPE html><html><body>\n<table class='scripts_running'>"
+			tab_str="<table class='scripts_running'>"
 			for i in status:
 				sum_str=sum_str+"%s: %d " % (i,status[i])
 				if status[i] == 1:
@@ -68,7 +68,7 @@ class centralHub(object):
 					class_str='uknqty'
 				out_str=out_str+self.Td(i,class_str)
 			print (sum_str)
-			tab_str=tab_str+self.wrapRow(out_str)+"</table>\n</body></html>"
+			tab_str=tab_str+self.wrapRow(out_str)+"</table>"
 			f=open('%s/scripts_running.php' % (outdir),'w')
 			f.write(tab_str)
 			f.close()
