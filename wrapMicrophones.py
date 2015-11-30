@@ -1,6 +1,6 @@
 # script to wrap up the microphones in python
 import Pyro4
-import time
+import time, os, sys
 import threading
 import signal
 
