@@ -44,10 +44,10 @@ class centralHub(object):
 		else:
 			print("Invalid thread_name")
 
-	def Td(text, class_id):
+	def Td(self,text, class_id):
   		return "<td class=%s>%s</td>" % (class_id,text)
 
-	def wrapRow(elements):
+	def wrapRow(self,elements):
 		return "<tr>%s</tr>" % (elements)
 
 	def run_summary_thread(self):
