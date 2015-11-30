@@ -1,4 +1,7 @@
 # script to setup the central Pyro hub
+# start name server with
+# python -m Pyro4.naming -n IP
+#
 import Pyro4
 import time
 import threading
@@ -121,8 +124,9 @@ class centralHub(object):
 		"""Returns True when daemon is running"""
 		return self._running
 
-	def stop(self):
+	def stop(self,proc):
 		"""Stop the daemon thread"""
+		status[proc]=0
 		self._running = False
 
 def main():
