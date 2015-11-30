@@ -88,7 +88,7 @@ class centralHub(object):
 		"""Cloudwatcher thread"""
 		global status
 		while (self._running):
-			status["Cloud Watcher"]=self.check(self._cloud_time,)
+			status["Cloud Watcher"]=self.check(self._cloud_time,90)
 			time.sleep(5)
 
 	def run_rain_thread(self):
