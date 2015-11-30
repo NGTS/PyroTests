@@ -75,7 +75,7 @@ class centralHub(object):
 			f=open('%s/scripts_running.php' % (outdir),'w')
 			f.write(tab_str)
 			f.close()
-			time.sleep(180)	
+			time.sleep(60)	
 
 	def run_transp_thread(self):
 		"""Transparency thread"""

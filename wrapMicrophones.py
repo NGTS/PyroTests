@@ -41,10 +41,6 @@ class ffserver(object):
 		"""Stop the daemon thread"""
 		self._running = False
 	
-	def stop_pyro(self): 
-		"""Stop the pyro connection"""
-		self.ping_microphone.stop("Microphones")
-
 # set up Ctrl+C handling
 die=False
 def signal_handler(signal,frame):
@@ -66,7 +62,7 @@ def main():
 		if die == True:
 			ff.stop()
 			print ("Stopping ffserver")
-			py.stop_pyro()
+			py.stop()
 			print ("Stopping pyro")
 			sys.exit(1)
 
