@@ -122,7 +122,7 @@ class centralHub(object):
 
 	@Pyro4.oneway
 	def update_microphone(self,t):
-		"""Update the hand shake time of rain sensor script"""
+		"""Update the hand shake time of microphones script"""
 		self._microphones_time=t
 
 	def check(self,chk, timeout_time):
