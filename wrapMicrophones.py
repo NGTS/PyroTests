@@ -33,7 +33,7 @@ class ffserver(object):
 		ping_microphone=Pyro4.Proxy("PYRONAME:central.hub")
 		ping_microphone.startThread("Microphones")
 		while(self._running):
-			ping_microphone.update_microphone(time.time())
+			ping_microphone.update_microphones(time.time())
 			time.sleep(10)
 
 	def stop(self):

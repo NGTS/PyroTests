@@ -19,7 +19,7 @@ class centralHub(object):
 		self._transp_time=time.time()
 		self._cloud_time=time.time()
 		self._rain_time=time.time()
-		self._microphone_time=time.time()
+		self._microphones_time=time.time()
 		self._lock=threading.Lock()
 
 	def startThread(self,thread_name):
@@ -37,9 +37,9 @@ class centralHub(object):
 			rain_runloop.daemon=True
 			rain_runloop.start()
 		elif thread_name=="Microphones":
-			microphone_runloop=threading.Thread(target=self.run_microphone_thread)
-			microphone_runloop.daemon=True
-			microphone_runloop.start()
+			microphones_runloop=threading.Thread(target=self.run_microphones_thread)
+			microphones_runloop.daemon=True
+			microphones_runloop.start()
 		elif thread_name=="Summary":
 			summary_runloop=threading.Thread(target=self.run_summary_thread)
 			summary_runloop.daemon=True
@@ -88,7 +88,7 @@ class centralHub(object):
 		"""Cloudwatcher thread"""
 		global status
 		while (self._running):
-			status["Cloud Watcher"]=self.check(self._cloud_time,90)
+			status["Cloud Watcher"]=self.check(self._cloud_time,)
 			time.sleep(5)
 
 	def run_rain_thread(self):
@@ -96,6 +96,13 @@ class centralHub(object):
 		global status
 		while (self._running):
 			status["Rain Sensors"]=self.check(self._rain_time,90)
+			time.sleep(5)
+
+	def run_microphones_thread(self):
+		"""Microphones thread"""
+		global status
+		while (self._running):
+			status["Microphones"]=self.check(self._microphones_time,90)
 			time.sleep(5)
 
 	@Pyro4.oneway
@@ -112,6 +119,11 @@ class centralHub(object):
 	def update_rain(self,t):
 		"""Update the hand shake time of rain sensor script"""
 		self._rain_time=t
+
+	@Pyro4.oneway
+	def update_microphone(self,t):
+		"""Update the hand shake time of rain sensor script"""
+		self._microphones_time=t
 
 	def check(self,chk, timeout_time):
 		"""Check the last update time"""
