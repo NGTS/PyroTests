@@ -3,10 +3,10 @@ import Pyro4
 import time
 import threading
 
-status={"transp":0,
-		"cloud":0,
-		"rain":0,
-		"microphones":0}
+status={"Transparency":0,
+		"Cloud Watcher":0,
+		"Rain Sensors":0,
+		"Microphones":0}
 
 class centralHub(object):
 
@@ -21,60 +21,78 @@ class centralHub(object):
 
 	def startThread(self,thread_name):
 		"""Start one of the various threads available"""
-		if thread_name=="transp":
+		if thread_name=="Transparency":
 			transp_runloop=threading.Thread(target=self.run_transp_thread)
 			transp_runloop.daemon=True
 			transp_runloop.start()
-		elif thread_name=="cloud":
+		elif thread_name=="Cloud Watcher":
 			cloud_runloop=threading.Thread(target=self.run_cloud_thread)
 			cloud_runloop.daemon=True
 			cloud_runloop.start()
-		elif thread_name=="rain":
+		elif thread_name=="Rain Sensors":
 			rain_runloop=threading.Thread(target=self.run_rain_thread)
 			rain_runloop.daemon=True
 			rain_runloop.start()
-		elif thread_name=="microphone":
+		elif thread_name=="Microphones":
 			microphone_runloop=threading.Thread(target=self.run_microphone_thread)
 			microphone_runloop.daemon=True
 			microphone_runloop.start()
-		elif thread_name=="summary":
+		elif thread_name=="Summary":
 			summary_runloop=threading.Thread(target=self.run_summary_thread)
 			summary_runloop.daemon=True
 			summary_runloop.start()
 		else:
 			print("Invalid thread_name")
 
+	def Td(text, class_id):
+  		return "<td class=%s>%s</td>" % (class_id,text)
+
+	def wrapRow(elements):
+		return "<tr>%s</tr>" % (elements)
+
 	def run_summary_thread(self):
 		"""Thread summary thread"""
 		global status
+		outdir="/home/ops/ngts/prism/monitor"
 		while(self._running):
-			# print the status of all inputs
 			sum_str=""
+			out_str=""
+			tab_str="<!DOCTYPE html><html><body>\n<table class='scripts_running'>"
 			for i in status:
 				sum_str=sum_str+"%s: %d " % (i,status[i])
+				if status[i] == 1:
+					class_str='goodqty'
+				elif status[i] == 0:
+					class_str='badqty'
+				else:
+					class_str='uknqty'
+				out_str=out_str+self.Td(i,class_str)
 			print (sum_str)
-			# update the html table 
-			time.sleep(5)	
+			tab_str=tab_str+self.wrapRow(out_str)+"</table>\n</body></html>"
+			f=open('%s/scripts_running.php' % (outdir),'w')
+			f.write(tab_str)
+			f.close()
+			time.sleep(180)	
 
 	def run_transp_thread(self):
 		"""Transparency thread"""
 		global status
 		while (self._running):
-			status["transp"]=self.check(self._transp_time,90)
+			status["Transparency"]=self.check(self._transp_time,90)
 			time.sleep(5)
 
 	def run_cloud_thread(self):
 		"""Cloudwatcher thread"""
 		global status
 		while (self._running):
-			status["cloud"]=self.check(self._cloud_time,90)
+			status["Cloud Watcher"]=self.check(self._cloud_time,90)
 			time.sleep(5)
 
 	def run_rain_thread(self):
 		"""Rain sensor thread"""
 		global status
 		while (self._running):
-			status["rain"]=self.check(self._rain_time,90)
+			status["Rain Sensors"]=self.check(self._rain_time,90)
 			time.sleep(5)
 
 	@Pyro4.oneway
@@ -115,7 +133,7 @@ def main():
 	uri=daemon.register(centralHub)
 	ns.register('central.hub',uri)
 	print ('Ready.')
-	hub.startThread('summary')
+	hub.startThread('Summary')
 	daemon.requestLoop(loopCondition=hub.running)
 
 if __name__ == '__main__':
