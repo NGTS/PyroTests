@@ -55,13 +55,15 @@ def main():
 	py=ffserver()	
 	py.startThread("pyro")
 
-	# close up 		
-	if die == True:
-		ff.stop()
-		print ("Stopping ffserver")
-		py.stop()
-		print ("Stopping pyro")
-		sys.exit(1)
+	while(1):
+		time.sleep(5)
+		# close up 		
+		if die == True:
+			ff.stop()
+			print ("Stopping ffserver")
+			py.stop()
+			print ("Stopping pyro")
+			sys.exit(1)
 
 if __name__ == '__main__':
 	main()
