@@ -26,7 +26,7 @@ class ffserver(object):
 
 	def run_ffserver_thread(self):
 		"""Run the ffserver in a separate thread"""
-		os.popen('/home/ops/ngts/ffserver/ffserver -f /home/ops/ngts/ffserver/ffserver.conf')
+		os.popen('/usr/local/bin/ffserver -f /home/ops/ngts/ffserver/ffserver.conf')
 
 	def run_pyro_thread(self):
 		"""Run the pyro in a separate thread"""
