@@ -26,14 +26,14 @@ class ffserver(object):
 
 	def run_ffserver_thread(self):
 		"""Run the ffserver in a separate thread"""
-		os.system('ffserver -f /home/ops/ngts/ffserver/ffserver.conf')
+		os.popen('ffserver -f /home/ops/ngts/ffserver/ffserver.conf')
 
 	def run_pyro_thread(self):
 		"""Run the pyro in a separate thread"""
 		ping_microphone=Pyro4.Proxy("PYRONAME:central.hub")
 		ping_microphone.startThread("Microphones")
 		while(self._running):
-			ping_microphone.update_microphones(time.time())
+			ping_microphone.update_microphone(time.time())
 			time.sleep(10)
 
 	def stop(self):
