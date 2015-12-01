@@ -34,7 +34,6 @@ class ffserver(object):
 		ping_microphone.startThread("Microphones")
 		while(self._running):
 			ping_microphone.update_microphone(time.time())
-			print ("checking in...")
 			time.sleep(10)
 		ping_microphone.stop("Microphones")
 
