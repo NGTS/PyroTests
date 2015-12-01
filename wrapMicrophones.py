@@ -36,6 +36,7 @@ class ffserver(object):
 			ping_microphone.update_microphone(time.time())
 			print ("checking in...")
 			time.sleep(10)
+		ping_microphone.stop("Microphones")
 
 	def stop(self):
 		"""Stop the daemon thread"""
