@@ -9,6 +9,7 @@ import threading
 status={"Transparency":0,
 		"Cloud Watcher":0,
 		"Rain Sensors":0,
+		"All Sky": 0,
 		"Microphones":0}
 
 class centralHub(object):
@@ -19,6 +20,7 @@ class centralHub(object):
 		self._transp_time=time.time()
 		self._cloud_time=time.time()
 		self._rain_time=time.time()
+		self._allsky_time=time.time()
 		self._microphones_time=time.time()
 		self._lock=threading.Lock()
 
@@ -32,6 +34,10 @@ class centralHub(object):
 			cloud_runloop=threading.Thread(target=self.run_cloud_thread)
 			cloud_runloop.daemon=True
 			cloud_runloop.start()
+		elif thread_name=="All Sky":
+			allsky_runloop=threading.Thread(target=self.run_allsky_thread)
+			allsky_runloop.daemon=True
+			allsky_runloop.start()
 		elif thread_name=="Rain Sensors":
 			rain_runloop=threading.Thread(target=self.run_rain_thread)
 			rain_runloop.daemon=True
@@ -98,6 +104,13 @@ class centralHub(object):
 			status["Rain Sensors"]=self.check(self._rain_time,90)
 			time.sleep(5)
 
+	def run_allsky_thread(self):
+		"""All sky camera thread"""
+		global status
+		while (self._running):
+			status["All Sky"]=self.check(self._allsky_time,90)
+			time.sleep(5)		
+
 	def run_microphones_thread(self):
 		"""Microphones thread"""
 		global status
@@ -119,6 +132,11 @@ class centralHub(object):
 	def update_rain(self,t):
 		"""Update the hand shake time of rain sensor script"""
 		self._rain_time=t
+
+	@Pyro4.oneway
+	def update_allsky(self,t):
+		"""Update the hand shake time of all sky camera script"""
+		self._allsky_time=t
 
 	@Pyro4.oneway
 	def update_microphone(self,t):
