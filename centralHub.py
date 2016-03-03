@@ -16,6 +16,7 @@ hub.report_in('rain_sensor')
 import threading
 import time
 import Pyro4
+import argparse
 
 Pyro4.config.REQUIRE_EXPOSE = True
 
@@ -36,11 +37,11 @@ class CentralHub(object):
             
     '''
 
-    def __init__(self, output_filename):
+    def __init__(self, output_filename, ntimes, sleeptime):
         self.output_filename = output_filename
 
-        self._ntimes = 5
-        self._sleeptime = 2
+        self._ntimes = ntimes
+        self._sleeptime = sleeptime
 
         self.monitors = sorted(['rain_sensor', 'alcor', 'microphones',
                                 'cloud_watcher', 'transparency'])
@@ -138,12 +139,27 @@ class StatusPresenter(object):
         with open(filename, 'w') as outfile:
             outfile.write(self.status_string())
 
-if __name__ == '__main__':
-    output_filename = '/home/ops/ngts/prism/monitor/scripts_running.php'
 
-    hub = CentralHub(output_filename)
-    daemon = Pyro4.Daemon()
+def main(args):
+    hub = CentralHub(
+        output_filename=args.output,
+        ntimes=args.ntimes,
+        sleeptime=args.sleeptime,
+    )
+
+    daemon = Pyro4.Daemon(args.daemon_host)
     ns = Pyro4.locateNS()
     uri = daemon.register(hub)
     ns.register('central.hub', uri)
     daemon.requestLoop()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', required=True, help='Output php file to render')
+    parser.add_argument('-n', '--ntimes', required=False, default=4, type=int,
+                        help='Timeout in poll loop times')
+    parser.add_argument('-s', '--sleeptime', required=False, default=30, type=float,
+                        help='Time between polls')
+    parser.add_argument('--daemon-host', required=False, default='10.2.5.32',
+                        help='Host to publish daemon to')
+    main(parser.parse_args())
