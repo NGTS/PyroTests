@@ -76,7 +76,7 @@ class CentralHub(object):
     def single_report_in(self, name):
         lower_name = name.lower()
         if lower_name not in self.monitors:
-            return {'status': 'failed',
+            return {'ok': False,
                     'reason': 'No monitor for {}. Available monitors: {}'.format(
                         name, list(self.monitors))}
 
@@ -84,7 +84,7 @@ class CentralHub(object):
         self.connections[lower_name] = self._ntimes
         old_status = self.status[lower_name]
         self.status[lower_name] = True
-        return {'status': 'ok', 'name': lower_name, 'previous': {
+        return {'ok': True, 'name': lower_name, 'previous': {
             'connections': old_connections, 'status': old_status,
         }}
 
