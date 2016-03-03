@@ -139,7 +139,9 @@ class StatusPresenter(object):
             outfile.write(self.status_string())
 
 if __name__ == '__main__':
-    hub = CentralHub('status.php')
+    output_filename = '/home/ops/ngts/prism/monitor/scripts_running.php'
+
+    hub = CentralHub(output_filename)
     daemon = Pyro4.Daemon()
     ns = Pyro4.locateNS()
     uri = daemon.register(hub)
