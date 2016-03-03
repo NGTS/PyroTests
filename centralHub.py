@@ -1,174 +1,165 @@
-# script to setup the central Pyro hub
-# start name server with
-# python -m Pyro4.naming -n IP
-#
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+To use this code in your program:
+
 import Pyro4
-import time
+
+hub = Pyro4.Proxy('PYRONAME:central.hub')
+
+# For example in the rain sensor program:
+hub.report_in('rain_sensor')
+
+'''
+
 import threading
+import time
+import Pyro4
+import argparse
 
-status={"Transparency":0,
-		"Cloud Watcher":0,
-		"Rain Sensors":0,
-		"All Sky": 0,
-		"Microphones":0}
+Pyro4.config.REQUIRE_EXPOSE = True
 
-class centralHub(object):
+class CentralHub(object):
 
-	def __init__(self):
-		"""Sets up the central hub"""
-		self._running=True
-		self._transp_time=time.time()
-		self._cloud_time=time.time()
-		self._rain_time=time.time()
-		self._allsky_time=time.time()
-		self._microphones_time=time.time()
-		self._lock=threading.Lock()
+    '''
+    Central hub object.
 
-	def startThread(self,thread_name):
-		"""Start one of the various threads available"""
-		if thread_name=="Transparency":
-			transp_runloop=threading.Thread(target=self.run_transp_thread)
-			transp_runloop.daemon=True
-			transp_runloop.start()
-		elif thread_name=="Cloud Watcher":
-			cloud_runloop=threading.Thread(target=self.run_cloud_thread)
-			cloud_runloop.daemon=True
-			cloud_runloop.start()
-		elif thread_name=="All Sky":
-			allsky_runloop=threading.Thread(target=self.run_allsky_thread)
-			allsky_runloop.daemon=True
-			allsky_runloop.start()
-		elif thread_name=="Rain Sensors":
-			rain_runloop=threading.Thread(target=self.run_rain_thread)
-			rain_runloop.daemon=True
-			rain_runloop.start()
-		elif thread_name=="Microphones":
-			microphones_runloop=threading.Thread(target=self.run_microphones_thread)
-			microphones_runloop.daemon=True
-			microphones_runloop.start()
-		elif thread_name=="Summary":
-			summary_runloop=threading.Thread(target=self.run_summary_thread)
-			summary_runloop.daemon=True
-			summary_runloop.start()
-		else:
-			print("Invalid thread_name")
+    This is exposed through Pyro and monitors the status of the
+    individual helper processes running.
 
-	def Td(self,text, class_id):
-  		return "<td class=%s>%s</td>" % (class_id,text)
+    The variables _ntimes and _sleeptime control the timeouts of
+    the checks:
 
-	def wrapRow(self,elements):
-		return "<tr>%s</tr>" % (elements)
+        * _sleeptime is the amount of time between each poll check
+        * _ntimes is the number of checks after a True value where
+            the status will remain True
+            
+    '''
 
-	def run_summary_thread(self):
-		"""Thread summary thread"""
-		global status
-		outdir="/home/ops/ngts/prism/monitor"
-		while(self._running):
-			sum_str=""
-			out_str=""
-			tab_str="<table class='scripts_running'>"
-			for i in status:
-				sum_str=sum_str+"%s: %d " % (i,status[i])
-				if status[i] == 1:
-					class_str='goodqty'
-				elif status[i] == 0:
-					class_str='badqty'
-				else:
-					class_str='uknqty'
-				out_str=out_str+self.Td(i,class_str)
-			print (sum_str)
-			tab_str=tab_str+self.wrapRow(out_str)+"</table>"
-			f=open('%s/scripts_running.php' % (outdir),'w')
-			f.write(tab_str)
-			f.close()
-			time.sleep(120)	
+    def __init__(self, output_filename, ntimes, sleeptime):
+        self.output_filename = output_filename
 
-	def run_transp_thread(self):
-		"""Transparency thread"""
-		global status
-		while (self._running):
-			status["Transparency"]=self.check(self._transp_time,90)
-			time.sleep(5)
+        self._ntimes = ntimes
+        self._sleeptime = sleeptime
 
-	def run_cloud_thread(self):
-		"""Cloudwatcher thread"""
-		global status
-		while (self._running):
-			status["Cloud Watcher"]=self.check(self._cloud_time,90)
-			time.sleep(5)
+        self.monitors = sorted(['rain_sensor', 'alcor', 'microphones',
+                                'cloud_watcher', 'transparency'])
+        self.status = {monitor: False for monitor in self.monitors}
+        self.connections = {monitor: 0 for monitor in self.monitors}
 
-	def run_rain_thread(self):
-		"""Rain sensor thread"""
-		global status
-		while (self._running):
-			status["Rain Sensors"]=self.check(self._rain_time,90)
-			time.sleep(5)
+        self.print_thread = threading.Thread(target=self.print_status)
+        self.print_thread.daemon = True
+        self.print_thread.start()
 
-	def run_allsky_thread(self):
-		"""All sky camera thread"""
-		global status
-		while (self._running):
-			status["All Sky"]=self.check(self._allsky_time,90)
-			time.sleep(5)		
+    @Pyro4.expose
+    @property
+    def ntimes(self):
+        return self._ntimes
 
-	def run_microphones_thread(self):
-		"""Microphones thread"""
-		global status
-		while (self._running):
-			status["Microphones"]=self.check(self._microphones_time,90)
-			time.sleep(5)
+    @Pyro4.expose
+    @ntimes.setter
+    def ntimes(self, value):
+        ''' Allows changing the `ntimes` parameter for running code '''
+        self._ntimes = value
 
-	@Pyro4.oneway
-	def update_transp(self,t):
-		"""Update the hand shake time of transparency script"""
-		self._transp_time=t
+    @Pyro4.expose
+    @property
+    def sleeptime(self):
+        return self._sleeptime
 
-	@Pyro4.oneway
-	def update_cloud(self,t):
-		"""Update the hand shake time of cloudwatcher script"""
-		self._cloud_time=t
+    @Pyro4.expose
+    @sleeptime.setter
+    def sleeptime(self, value):
+        ''' Allows changing the `sleeptime` parameter for running code '''
+        self._sleeptime = value
 
-	@Pyro4.oneway
-	def update_rain(self,t):
-		"""Update the hand shake time of rain sensor script"""
-		self._rain_time=t
+    def single_report_in(self, name):
+        lower_name = name.lower()
+        if lower_name not in self.monitors:
+            return {'ok': False,
+                    'reason': 'No monitor for {}. Available monitors: {}'.format(
+                        name, list(self.monitors))}
 
-	@Pyro4.oneway
-	def update_allsky(self,t):
-		"""Update the hand shake time of all sky camera script"""
-		self._allsky_time=t
+        old_connections = self.connections[lower_name]
+        self.connections[lower_name] = self._ntimes
+        old_status = self.status[lower_name]
+        self.status[lower_name] = True
+        return {'ok': True, 'name': lower_name, 'previous': {
+            'connections': old_connections, 'status': old_status,
+        }}
 
-	@Pyro4.oneway
-	def update_microphone(self,t):
-		"""Update the hand shake time of microphones script"""
-		self._microphones_time=t
+    @Pyro4.expose
+    def report_in(self, *names):
+        out = []
+        for name in names:
+            out.append(self.single_report_in(name))
+        return out
 
-	def check(self,chk, timeout_time):
-		"""Check the last update time"""
-		if (time.time() - chk) > timeout_time: 
-			return 0
-		else:
-			return 1
-		
-	def running(self):
-		"""Returns True when daemon is running"""
-		return self._running
+    def print_status(self):
+        while True:
+            print(self.status)
 
-	def stop(self,proc):
-		"""Stop the daemon thread"""
-		status[proc]=0
-		self._running = False
+            StatusPresenter(self.status).render_to(self.output_filename)
 
-def main():
-	"""Wrap it all up"""
-	daemon=Pyro4.Daemon('10.2.5.32')
-	hub=centralHub()
-	ns=Pyro4.locateNS()
-	uri=daemon.register(centralHub)
-	ns.register('central.hub',uri)
-	print ('Ready.')
-	hub.startThread('Summary')
-	daemon.requestLoop(loopCondition=hub.running)
+            self.update_connections()
+            time.sleep(self.sleeptime)
+
+    def update_connections(self):
+        for monitor in self.monitors:
+            if self.connections[monitor] > 0:
+                self.connections[monitor] -= 1
+
+            if self.connections[monitor] <= 0:
+                self.connections[monitor] = 0
+                self.status[monitor] = False
+
+class StatusPresenter(object):
+    def __init__(self, status):
+        self.status = status
+        self.css_class = {True: 'goodqty', False: 'badqty'}
+
+    @staticmethod
+    def humanise(monitor):
+        return monitor.replace('_', '')
+
+    def format_status_row(self, monitor):
+        status = self.status[monitor]
+        css_class = self.css_class[status]
+        return '<tr><td class="{css_class}">{text}</td></tr>'.format(
+            text=self.humanise(monitor),
+            css_class=css_class)
+
+    def status_string(self):
+        out = '<table class="scripts_running">{content}</table>'
+        content = ''.join([self.format_status_row(monitor) for monitor in self.status])
+        return out.format(content=content)
+
+    def render_to(self, filename):
+        with open(filename, 'w') as outfile:
+            outfile.write(self.status_string())
+
+
+def main(args):
+    hub = CentralHub(
+        output_filename=args.output,
+        ntimes=args.ntimes,
+        sleeptime=args.sleeptime,
+    )
+
+    daemon = Pyro4.Daemon(args.daemon_host)
+    ns = Pyro4.locateNS()
+    uri = daemon.register(hub)
+    ns.register('central.hub', uri)
+    daemon.requestLoop()
 
 if __name__ == '__main__':
-	main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', required=True, help='Output php file to render')
+    parser.add_argument('-n', '--ntimes', required=False, default=4, type=int,
+                        help='Timeout in poll loop times')
+    parser.add_argument('-s', '--sleeptime', required=False, default=30, type=float,
+                        help='Time between polls')
+    parser.add_argument('--daemon-host', required=False, default='10.2.5.32',
+                        help='Host to publish daemon to')
+    main(parser.parse_args())
