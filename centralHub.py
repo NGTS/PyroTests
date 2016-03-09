@@ -126,12 +126,12 @@ class StatusPresenter(object):
     def format_status_row(self, monitor):
         status = self.status[monitor]
         css_class = self.css_class[status]
-        return '<tr><td class="{css_class}">{text}</td></tr>'.format(
+        return '<td class="{css_class}">{text}</td>'.format(
             text=self.humanise(monitor),
             css_class=css_class)
 
     def status_string(self):
-        out = '<table class="scripts_running">{content}</table>'
+        out = '<table class="scripts_running"><tr>{content}</tr></table>'
         content = ''.join([self.format_status_row(monitor) for monitor in self.status])
         return out.format(content=content)
 
