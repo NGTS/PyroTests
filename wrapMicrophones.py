@@ -30,13 +30,11 @@ class ffserver(object):
 
 	def run_pyro_thread(self):
 		"""Run the pyro in a separate thread"""
-		ping_microphone=Pyro4.Proxy("PYRONAME:central.hub")
-		ping_microphone.startThread("Microphones")
+		hub=Pyro4.Proxy("PYRONAME:central.hub")
 		while(self._running):
-			ping_microphone.update_microphone(time.time())
+			hub.report_in('microphones')
 			time.sleep(10)
-		ping_microphone.stop("Microphones")
-
+		
 	def stop(self):
 		"""Stop the daemon thread"""
 		self._running = False
