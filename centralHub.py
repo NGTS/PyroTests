@@ -13,6 +13,8 @@ hub.report_in('rain_sensor')
 
 '''
 
+# TODO: when running at warwick, remove all the PHP stuff
+
 import threading
 import time
 import Pyro4
@@ -114,6 +116,10 @@ class CentralHub(object):
             if self.connections[monitor] <= 0:
                 self.connections[monitor] = 0
                 self.status[monitor] = False
+
+    @Pyro4.expose
+    def get_status(self):
+        return self.status
 
 class StatusPresenter(object):
     def __init__(self, status):
