@@ -98,7 +98,7 @@ class CentralHub(object):
 
     @Pyro4.expose
     def report_in(self, name, arg=None):
-        out = self.single_report_in(name, arg))
+        out = self.single_report_in(name, arg)
         return out
 
     def print_status(self):
