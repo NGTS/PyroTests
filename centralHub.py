@@ -47,7 +47,7 @@ class CentralHub(object):
 
         self.monitors = sorted(['rain_sensor', 'alcor', 'microphones',
                                 'cloud_watcher', 'transparency',
-                                'data_transfer'])
+                                'data_transfer', 'disc_free', 'uncopied_actions'])
         self.status = {monitor: False for monitor in self.monitors}
         self.connections = {monitor: 0 for monitor in self.monitors}
 
@@ -77,7 +77,7 @@ class CentralHub(object):
         ''' Allows changing the `sleeptime` parameter for running code '''
         self._sleeptime = value
 
-    def single_report_in(self, name):
+    def single_report_in(self, name, arg):
         lower_name = name.lower()
         if lower_name not in self.monitors:
             return {'ok': False,
@@ -87,16 +87,18 @@ class CentralHub(object):
         old_connections = self.connections[lower_name]
         self.connections[lower_name] = self._ntimes
         old_status = self.status[lower_name]
-        self.status[lower_name] = True
-        return {'ok': True, 'name': lower_name, 'previous': {
+        if not arg:
+            return_status = True
+        else:
+            return_status = arg
+        self.status[lower_name] = return_status
+        return {'ok': return_status, 'name': lower_name, 'previous': {
             'connections': old_connections, 'status': old_status,
         }}
 
     @Pyro4.expose
-    def report_in(self, *names):
-        out = []
-        for name in names:
-            out.append(self.single_report_in(name))
+    def report_in(self, name, arg=None):
+        out = self.single_report_in(name, arg))
         return out
 
     def print_status(self):
