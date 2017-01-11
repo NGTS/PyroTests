@@ -44,7 +44,8 @@ class CentralHub(object):
         self._sleeptime = sleeptime
 
         self.monitors = sorted(['rain_sensor', 'alcor', 'microphones',
-                                'cloud_watcher', 'transparency'])
+                                'cloud_watcher', 'transparency',
+                                'data_transfer'])
         self.status = {monitor: False for monitor in self.monitors}
         self.connections = {monitor: 0 for monitor in self.monitors}
 
@@ -156,7 +157,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', required=True, help='Output php file to render')
-    parser.add_argument('-n', '--ntimes', required=False, default=4, type=int,
+    parser.add_argument('-n', '--ntimes', required=False, default=10, type=int,
                         help='Timeout in poll loop times')
     parser.add_argument('-s', '--sleeptime', required=False, default=30, type=float,
                         help='Time between polls')
