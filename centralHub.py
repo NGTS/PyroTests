@@ -23,50 +23,26 @@ class CentralHub(object):
 
     This is exposed through Pyro and monitors the status of the
     individual helper processes running.
-
-    The variables _ntimes and _sleeptime control the timeouts of
-    the checks:
-
-        * _sleeptime is the amount of time between each poll check
-        * _ntimes is the number of checks after a True value where
-            the status will remain True
     """
 
-    def __init__(self, ntimes, sleeptime):
-        self._ntimes = ntimes
-        self._sleeptime = sleeptime
+    def __init__(self):
+        self._ntimes = {'rain_sensor': 10,
+                        'alcor': 10,
+                        'microphones': 10,
+                        'cloud_watcher': 10,
+                        'transparency': 10,
+                        'data_transfer': 10,
+                        'free_gb': 4320,
+                        'uncopied_gb': 4320}
+        self._sleeptime = 30
 
-        self.monitors = sorted(['rain_sensor', 'alcor', 'microphones',
-                                'cloud_watcher', 'transparency',
-                                'data_transfer', 'free_gb', 'uncopied_gb'])
+        self.monitors = sorted(list(self._ntimes.keys()))
         self.status = {monitor: False for monitor in self.monitors}
         self.connections = {monitor: 0 for monitor in self.monitors}
 
         self.print_thread = threading.Thread(target=self.print_status)
         self.print_thread.daemon = True
         self.print_thread.start()
-
-    @Pyro4.expose
-    @property
-    def ntimes(self):
-        return self._ntimes
-
-    @Pyro4.expose
-    @ntimes.setter
-    def ntimes(self, value):
-        """ Allows changing the `ntimes` parameter for running code """
-        self._ntimes = value
-
-    @Pyro4.expose
-    @property
-    def sleeptime(self):
-        return self._sleeptime
-
-    @Pyro4.expose
-    @sleeptime.setter
-    def sleeptime(self, value):
-        """ Allows changing the `sleeptime` parameter for running code """
-        self._sleeptime = value
 
     def single_report_in(self, name, arg):
         lower_name = name.lower()
@@ -76,7 +52,7 @@ class CentralHub(object):
                         name, list(self.monitors))}
 
         old_connections = self.connections[lower_name]
-        self.connections[lower_name] = self._ntimes
+        self.connections[lower_name] = self._ntimes[lower_name]
         old_status = self.status[lower_name]
         if not arg:
             return_status = True
@@ -112,11 +88,7 @@ class CentralHub(object):
         return self.status
 
 def main(args):
-    hub = CentralHub(
-        ntimes=args.ntimes,
-        sleeptime=args.sleeptime
-        )
-
+    hub = CentralHub()
     daemon = Pyro4.Daemon(args.daemon_host)
     ns = Pyro4.locateNS()
     uri = daemon.register(hub)
@@ -125,10 +97,6 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-n', '--ntimes', required=False, default=10, type=int,
-                        help='Timeout in poll loop times')
-    parser.add_argument('-s', '--sleeptime', required=False, default=30, type=float,
-                        help='Time between polls')
     parser.add_argument('--daemon-host', required=False, default='10.2.5.32',
                         help='Host to publish daemon to')
     main(parser.parse_args())
