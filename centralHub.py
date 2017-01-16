@@ -34,7 +34,7 @@ class CentralHub(object):
                         'data_transfer': 10,
                         'free_gb': 4320,
                         'uncopied_gb': 4320}
-        self._sleeptime = 30
+        self.sleeptime = 30
 
         self.monitors = sorted(list(self._ntimes.keys()))
         self.status = {monitor: False for monitor in self.monitors}
