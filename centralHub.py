@@ -71,6 +71,7 @@ class CentralHub(object):
     def print_status(self):
         while True:
             print(self.status)
+            print(self.connections)
             self.update_connections()
             time.sleep(self.sleeptime)
 
