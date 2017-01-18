@@ -54,7 +54,7 @@ class CentralHub(object):
         old_connections = self.connections[lower_name]
         self.connections[lower_name] = self._ntimes[lower_name]
         old_status = self.status[lower_name]
-        if not arg:
+        if arg is None:
             return_status = True
         else:
             return_status = arg
