@@ -32,6 +32,8 @@ class CentralHub(object):
                         'cloud_watcher': 10,
                         'transparency': 10,
                         'data_transfer': 10,
+                        'sge_running': 10,
+                        'sge_queued': 10,
                         'free_gb': 4320,
                         'uncopied_gb': 4320}
         self.sleeptime = 30
